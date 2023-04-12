@@ -146,7 +146,7 @@
 
         dependency-source = file-system.read-text-file dependency-full-path
 
-        winjs.eval-script-source dependency-source, qualified-dependency-name
+        winjs.eval-script-source dependency-source, "// #qualified-dependency-name (#dependency-full-path)"
 
     dependency-manager = do ->
 
