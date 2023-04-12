@@ -37,7 +37,7 @@ Where `some.namespace` can either be:
 
 The `namespaces.conf` configuration file is optional.
 
-Each line can:
+Each line can either:
 
   * be empty
   * include a comment preceded by a '#'
