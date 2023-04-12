@@ -33,7 +33,7 @@ Where `some.namespace` can either be:
   * an actual filesystem folder hierarchy starting from the current working folder, or 
   * a folder mapped via the optional `namespaces.conf` configuration file.
 
-## Configuration file Syntax
+## Configuration file syntax
 
 The `namespaces.conf` configuration file is optional.
 
