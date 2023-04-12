@@ -41,7 +41,7 @@ Each line can either:
 
   * be empty
   * include a comment preceded by a '#'
-  * declare a 
+  * declare a qualified namespace folder mapping
 
 namespaces.conf
 ```
