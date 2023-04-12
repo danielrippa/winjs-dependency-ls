@@ -10,7 +10,7 @@ The qualified namespace resource resolves to the full path of a .js file.
 
 The qualified namespace can be either an actual filesystem folder hierarchy or can be a virtual namespace configured via an optional `namespaces.conf` configuration file.
 
-Each resolved dependency is cached so after being referenced for the first time, further references are accessed from the cache instead of being read again from the filesystem.
+Once resolved each dependency is cached so further references are accessed from the cache instead of being read again from the filesystem.
 
 ## Usage
 
