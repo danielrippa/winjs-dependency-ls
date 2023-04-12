@@ -2,7 +2,7 @@
 
 A dependency manager for WinJS ([danielrippa/winjs](https://github.com/danielrippa/winjs)).
 
-It is used both in the command line and in the javascript code as a function.
+It is used both in the command line and in javascript code as a function.
 
 A dependency is a .js file referenced as a qualified namespace resource like `some.namespace.Dependency` where `some.namespace` is the qualified namespace and `Dependency` is the resource name.
 
