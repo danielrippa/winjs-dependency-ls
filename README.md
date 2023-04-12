@@ -45,5 +45,18 @@ Each line can:
 
 namespaces.conf
 ```
-some.namespace folder
+# A comment that will be ignored 
+
+some.namespace a:\folder\somewhere
+another.namespace another-folder
+```
+
+In the previous example assuming the current working folder is `C:\Users\DanielR`:
+
+```
+  { some-method } = dependency 'folder.FileA'
+  // Resolves to: C:\Users\DanielR\folder\FileA.js  
+  
+  { some-other-method } = dependency 'some.namespace.FileB'
+  // Resolves to: a:\folder\somewhere\FileB.js
 ```
