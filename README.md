@@ -61,7 +61,7 @@ In the previous example assuming the current working folder is `C:\Users\DanielR
   // Resolves to: a:\folder\somewhere\FileB.js
 ```
 
-A special case in `namespaces.conf` is the `.` namespace. It can be used in cases where the filesystem hierarchy root is on another folder than the one where the script is executed.
+A special case in `namespaces.conf` is the `.` namespace. It can be used in cases where the filesystem hierarchy root is on another folder that is not the same as the one where the script is executed.
 
 E.g.
 
