@@ -115,6 +115,20 @@
 
           namespaces[ qualified-namespace ] := namespace-path
           return namespace-path
+          
+        if configuration-namespaces[ '.' ] isnt void
+
+          namespace-path =
+
+            [ configuration-namespaces[ '.' ] ]
+            |> (++ qualified-namespace / '.')
+            |> -> it * '\\'
+
+          if file-system.folder-exists namespace-path
+
+            namespaces[ qualified-namespace ] := namespace-path
+            return namespace-path
+          
 
         throw exception "namespace-path", "Folder '#namespace-path' for namespace '#qualified-namespace' does not exist"
 
