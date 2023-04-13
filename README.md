@@ -60,3 +60,20 @@ In the previous example assuming the current working folder is `C:\Users\DanielR
   { some-other-method } = dependency 'some.namespace.FileB'
   // Resolves to: a:\folder\somewhere\FileB.js
 ```
+
+A special case in `namespaces.conf` is the `.` namespace. It can be used in cases where the filesystem hierarchy root is on another folder than the one where the script is executed.
+
+E.g.
+
+If we are executing from the `C:\Users\DanielR` folder but many of our dependencies are rooted in `d:\dependencies` (e.g. winjs is in d:\dependencies\winjs, native is in d:\dependencies\native and so on) is much simpler to indicate it in `namespaces.conf` like this:
+
+namespaces.conf
+```
+. d:\dependencies
+```
+
+instead of the longer form
+```
+winjs d:\dependencies\winjs
+native d:\dependencies\native
+```
