@@ -151,9 +151,9 @@
 
           dependency-full-path = [ namespace-path, filename ] * '\\'
 
-        if not file-system.file-exists dependency-full-path
+          if not file-system.file-exists dependency-full-path
 
-          throw exception 'qualified-dependency-name', "Dependency file '#dependency-full-path' not found"
+            throw exception 'qualified-dependency-name', "Dependency file '#dependency-full-path' not found"
 
         winjs.load-script dependency-full-path, qualified-dependency-name
 
