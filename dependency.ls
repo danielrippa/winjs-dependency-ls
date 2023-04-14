@@ -30,15 +30,7 @@
         lcase, string-as-array, trim
       }
 
-    file-system = do ->
-
-      { text-file, file-path, get-current-folder, file-exists, folder-exists } = winjs.load-library 'WinjsFileSystem.dll'
-
-      { read: read-text-file } = text-file
-
-      { get-base-name } = file-path
-
-      { read-text-file, get-current-folder, file-exists, folder-exists }
+    { file-system } = winjs
 
     read-configuration-file = (filename) ->
 
@@ -115,7 +107,7 @@
 
           namespaces[ qualified-namespace ] := namespace-path
           return namespace-path
-          
+
         if configuration-namespaces[ '.' ] isnt void
 
           namespace-path =
@@ -128,7 +120,6 @@
 
             namespaces[ qualified-namespace ] := namespace-path
             return namespace-path
-          
 
         throw exception "namespace-path", "Folder '#namespace-path' for namespace '#qualified-namespace' does not exist"
 
@@ -160,9 +151,7 @@
 
         dependency-source = file-system.read-text-file dependency-full-path
 
-        # winjs.eval-script-source dependency-source, "// #qualified-dependency-name (#dependency-full-path)"
-        
-        eval dependency-source
+        winjs.load-script dependency-full-path, qualified-dependency-name
 
     dependency-manager = do ->
 
