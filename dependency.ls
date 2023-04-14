@@ -139,17 +139,21 @@
 
         { qualified-namespace, dependency-name } = parse-qualified-dependency-name qualified-dependency-name
 
-        namespace-path = namespace-path-manager.get-qualified-namespace-path qualified-namespace
-
         filename = [ dependency-name, 'js' ] * '.'
 
-        dependency-full-path = [ namespace-path, filename ] * '\\'
+        if file-system.file-exists filename
+
+          dependency-full-path = filename
+
+        else
+
+          namespace-path = namespace-path-manager.get-qualified-namespace-path qualified-namespace
+
+          dependency-full-path = [ namespace-path, filename ] * '\\'
 
         if not file-system.file-exists dependency-full-path
 
           throw exception 'qualified-dependency-name', "Dependency file '#dependency-full-path' not found"
-
-        dependency-source = file-system.read-text-file dependency-full-path
 
         winjs.load-script dependency-full-path, qualified-dependency-name
 
@@ -175,4 +179,16 @@
 
     (qualified-dependency-name) -> dependency-manager.get-dependency qualified-dependency-name
 
-  process.args => if ..length > 2 => dependency ..2
+  process.args
+
+    if ..length > 2
+
+      script = ..2
+
+      if winjs.file-system.file-exists script
+
+        winjs.load-script script, 'script'
+
+      else
+
+        dependency script
