@@ -70,8 +70,6 @@
         if qualified-namespace is ''
           qualified-namespace = '.'
 
-        writeln 'qualified namespace: ', qualified-namespace
-
         namespace-path = namespaces[ qualified-namespace ]
 
         if namespace-path isnt void
@@ -137,8 +135,6 @@
 
         { qualified-namespace, dependency-name } = parse-qualified-dependency-name qualified-dependency-name
 
-        writeln qualified-namespace, dependency-name
-
         filename = [ dependency-name, 'js' ] * '.'
 
         if fs.file-exists filename
@@ -170,8 +166,6 @@
       get-dependency = (qualified-dependency-name) ->
 
         qname = lcase qualified-dependency-name
-
-        writeln qname
 
         result = dependencies[ qname ]
 
