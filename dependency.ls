@@ -1,50 +1,40 @@
 
   dependency = do ->
 
-    new-exception = (name, message, exception-stack) -> { name, message, exception-stack }
+    fs = winjs.os.file-system
 
-    fn-exception = (fn-name) -> (arg-name, message, previous-exception) -> new-exception "dependency.ls #fn-name (#arg-name)", message, previous-exception
+    ##
 
-    string = do ->
+    lcase = (.to-lower-case!)
 
-      us = String.from-char-code 31
+    unit = String.from-char-code 31
 
-      trim-regex = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g
+    replace-crlf = (.replace /\r\n/g, unit)
+    replace-lf   = (.replace /\n/g, unit)
 
-      replace-crlf = (.replace /\r\n/g, us)
-      replace-lf = (.replace /\n/g, us)
-      replace-cr = (.replace /\r/g, us)
-      replace-ff = (.replace /\f/g, us)
+    string-as-units = -> it |> replace-crlf |> replace-lf
 
-      string-as-units = -> it |> replace-crlf |> replace-lf |> replace-cr |> replace-ff
+    units-as-array = (.split unit)
 
-      units-as-array = (.split us)
+    string-as-array = -> it |> string-as-units |> units-as-array
 
-      lcase = (.to-lower-case!)
+    trim-regex = /^\s+|\s+$/g
 
-      string-as-array = -> it |> string-as-units |> units-as-array
+    trim = (.replace trim-regex, '')
 
-      trim = (.replace trim-regex, '')
-
-      {
-        lcase, string-as-array, trim
-      }
-
-    { file-system } = winjs
+    #
 
     read-configuration-file = (filename) ->
 
       configuration = {}
 
-      if file-system.file-exists filename
+      if fs.file-exists filename
 
-        exception = fn-exception 'read-configuration-file'
-
-        configuration-lines = filename |> file-system.read-text-file |> string.string-as-array
+        configuration-lines = filename |> fs.read-text-file |> string-as-array
 
         for line, line-number in configuration-lines
 
-          line = string.trim line
+          line = trim line
 
           if line is ''
             continue
@@ -54,7 +44,7 @@
 
           space-index = line.index-of ' '
 
-          throw exception 'configuration-line', "Invalid syntax at line (#line-number) '#line' of configuration file '#filename'. A valid configuration line has a word and an arbitrary value separated by space, or can be an empty line, or can have a comment line that starts with '#' " \
+          throw new Error "Invalid configuration file syntax at line (#line-number) '#line' of configuration file '#filename'" \
             if space-index is -1
 
           key = line.slice 0, space-index
@@ -71,14 +61,16 @@
 
       configuration-namespaces = read-configuration-file configuration-filename
 
-      namespaces = '.': file-system.get-current-folder!
+      current-folder = fs.get-current-folder!
 
-      get-qualified-namespace-path: (qualified-namespace) ->
+      namespaces = '.' : current-folder
 
-        exception = fn-exception 'namespace-path-manager.get-qualified-namespace-path'
+      get-qualified-namespace-path = (qualified-namespace) ->
 
         if qualified-namespace is ''
           qualified-namespace = '.'
+
+        writeln 'qualified namespace: ', qualified-namespace
 
         namespace-path = namespaces[ qualified-namespace ]
 
@@ -90,20 +82,22 @@
 
         if namespace-path isnt void
 
-          if file-system.folder-exists namespace-path
+          if fs.folder-exists namespace-path
 
             namespaces[ qualified-namespace ] := namespace-path
             return namespace-path
 
-          throw exception "configuration-namespaces[ #qualified-namespace ]", "Folder '#namespace-path' for namespace '#qualified-namespace' in configuration file '#configuration-filename' does not exist"
+          throw new Error "Folder '#namespace-path' for namespace '#qualified-namespace' in configuration file '#configuration-filename' does not exist"
+
+        build-path = (* '\\')
 
         namespace-path =
 
-          [ file-system.get-current-folder! ]
+          [ current-folder ]
           |> (++ qualified-namespace / '.')
-          |> -> it * '\\'
+          |> build-path
 
-        if file-system.folder-exists namespace-path
+        if fs.folder-exists namespace-path
 
           namespaces[ qualified-namespace ] := namespace-path
           return namespace-path
@@ -114,34 +108,40 @@
 
             [ configuration-namespaces[ '.' ] ]
             |> (++ qualified-namespace / '.')
-            |> -> it * '\\'
+            |> build-path
 
-          if file-system.folder-exists namespace-path
+          if fs.folder-exists namespace-path
 
             namespaces[ qualified-namespace ] := namespace-path
             return namespace-path
 
-        throw exception "namespace-path", "Folder '#namespace-path' for namespace '#qualified-namespace' does not exist"
+        throw new Error "Folder '#namespace-path' for namespace '#qualified-namespace' does not exist"
+
+      {
+        get-qualified-namespace-path
+      }
+
+    ##
 
     parse-qualified-dependency-name = (qualified-dependency-name) ->
 
       [ ...namespaces, dependency-name ] = qualified-dependency-name / '.'
 
-      qualified-namespace = namespaces * '.' |> string.lcase
+      qualified-namespace = namespaces * '.' |> lcase
 
       { qualified-namespace, dependency-name }
 
     dependency-builder = do ->
 
-      build-dependency: (qualified-dependency-name) ->
-
-        exception = fn-exception 'dependency-builder.build-dependency'
+      build-dependency = (qualified-dependency-name) ->
 
         { qualified-namespace, dependency-name } = parse-qualified-dependency-name qualified-dependency-name
 
+        writeln qualified-namespace, dependency-name
+
         filename = [ dependency-name, 'js' ] * '.'
 
-        if file-system.file-exists filename
+        if fs.file-exists filename
 
           dependency-full-path = filename
 
@@ -151,43 +151,62 @@
 
           dependency-full-path = [ namespace-path, filename ] * '\\'
 
-          if not file-system.file-exists dependency-full-path
+          if not fs.file-exists dependency-full-path
 
-            throw exception 'qualified-dependency-name', "Dependency file '#dependency-full-path' not found"
+            throw new Error "Dependency file '#dependency-full-path' not found"
 
         winjs.load-script dependency-full-path, qualified-dependency-name
+
+      {
+        build-dependency
+      }
+
+    ##
 
     dependency-manager = do ->
 
       dependencies = {}
 
-      get-dependency: (qualified-dependency-name) ->
+      get-dependency = (qualified-dependency-name) ->
 
-        exception = fn-exception 'dependency-manager.get-dependency'
+        qname = lcase qualified-dependency-name
 
-        result = dependencies[ string.lcase qualified-dependency-name ]
+        writeln qname
+
+        result = dependencies[ qname ]
 
         if result is void
 
           result = dependency-builder.build-dependency qualified-dependency-name
 
-          dependencies[ string.lcase qualified-dependency-name ] := result
+          dependencies[ qname ] := result
 
         result
+
+      {
+        get-dependency
+      }
 
     ##
 
     (qualified-dependency-name) -> dependency-manager.get-dependency qualified-dependency-name
 
-  process.args
 
-    if ..length > 2
+  do ->
 
-      script = ..2
+    winjs
 
-      if winjs.file-system.file-exists script
+      args = ..process.args
 
-        winjs.load-script script, 'script'
+      fs = ..os.file-system
+
+    if args.length > 2
+
+      script = args.2
+
+      if fs.file-exists script
+
+        winjs.load-script script
 
       else
 
