@@ -1,7 +1,7 @@
 
   dependency = do ->
 
-    fs = winjs.os.file-system
+    fs = os.file-system
 
     ##
 
@@ -188,11 +188,9 @@
 
   do ->
 
-    winjs
+    args = winjs.process.args
 
-      args = ..process.args
-
-      fs = ..os.file-system
+    fs = os.file-system
 
     if args.length > 2
 
