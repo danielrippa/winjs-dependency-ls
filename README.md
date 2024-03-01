@@ -1,6 +1,6 @@
 # winjs-dependency-ls
 
-A dependency manager for WinJS ([danielrippa/winjs](https://github.com/danielrippa/winjs)).
+A dependency manager for WinJS ([danielrippa/winjs](https://github.com/danielrippa/winjs) and [danielrippa/winjs64](https://github.com/danielrippa/winjs64)).
 
 It is used both in the command line and in javascript code as a function.
 
