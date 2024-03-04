@@ -137,19 +137,13 @@
 
         filename = [ dependency-name, 'js' ] * '.'
 
-        if fs.file-exists filename
+        namespace-path = namespace-path-manager.get-qualified-namespace-path qualified-namespace
 
-          dependency-full-path = filename
+        dependency-full-path = [ namespace-path, filename ] * '\\'
 
-        else
+        if not fs.file-exists dependency-full-path
 
-          namespace-path = namespace-path-manager.get-qualified-namespace-path qualified-namespace
-
-          dependency-full-path = [ namespace-path, filename ] * '\\'
-
-          if not fs.file-exists dependency-full-path
-
-            throw new Error "Dependency file '#dependency-full-path' not found"
+          throw new Error "Dependency file '#dependency-full-path' not found"
 
         winjs.load-script dependency-full-path, "(#qualified-dependency-name) #dependency-full-path"
 
