@@ -145,9 +145,7 @@
 
           throw new Error "Dependency file '#dependency-full-path' not found"
 
-        # winjs.load-script dependency-full-path, "(#qualified-dependency-name) #dependency-full-path"
-
-        winjs.load-script dependency-full-path
+        winjs.load-script dependency-full-path, "(#qualified-dependency-name) #dependency-full-path"
 
       {
         build-dependency
@@ -180,7 +178,6 @@
     ##
 
     (qualified-dependency-name) -> dependency-manager.get-dependency qualified-dependency-name
-
 
   do ->
 
