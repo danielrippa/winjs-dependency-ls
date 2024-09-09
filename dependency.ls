@@ -1,36 +1,48 @@
 
   dependency = do ->
 
-    fs = os.file-system
+    writeln = -> winjs.process.io.stdout '\n' + [ (arg) for arg in arguments ] * ' '
 
-    ##
+    { folder-exists, file-exists, read-text-file, get-current-folder } = os.file-system
+
+    get-path = (string) -> string / '\\' |> (.slice 0, -1) |> (* '\\')
+
+    build-path = (* '\\')
 
     lcase = (.to-lower-case!)
 
-    unit = String.from-char-code 31
+    string-as-array = do ->
 
-    replace-crlf = (.replace /\r\n/g, unit)
-    replace-lf   = (.replace /\n/g, unit)
+      us = String.from-char-code 31
 
-    string-as-units = -> it |> replace-crlf |> replace-lf
+      replace-crlf = (.replace /\r\n/g, us)
+      replace-lf   = (.replace /\n/g, us)
 
-    units-as-array = (.split unit)
+      string-as-units = -> it |> replace-crlf |> replace-lf
 
-    string-as-array = -> it |> string-as-units |> units-as-array
+      units-as-array = (.split us)
 
-    trim-regex = /^\s+|\s+$/g
+      #
 
-    trim = (.replace trim-regex, '')
+      -> it |> string-as-units |> units-as-array
 
     #
 
-    read-configuration-file = (filename) ->
+    trim = do ->
+
+      trim-regex = /^\s+|\s+$/g
+
+      (.replace trim-regex, '')
+
+    ##
+
+    read-configuration-file = (filepath) ->
 
       configuration = {}
 
-      if fs.file-exists filename
+      if file-exists filepath
 
-        configuration-lines = filename |> fs.read-text-file |> string-as-array
+        configuration-lines = filepath |> read-text-file |> string-as-array
 
         for line, line-number in configuration-lines
 
@@ -55,20 +67,31 @@
 
       configuration
 
+    #
+
     namespace-path-manager = do ->
+
+      { args } = winjs.process
+
+      winjs-path = get-path args.0
+
+      script-path = get-path args.2
 
       configuration-filename = 'namespaces.conf'
 
-      configuration-namespaces = read-configuration-file configuration-filename
+      configuration-filepath = build-path [ script-path, configuration-filename ]
 
-      current-folder = fs.get-current-folder!
+      configuration-namespaces = read-configuration-file configuration-filepath
 
-      namespaces = '.' : current-folder
+      current-folder = get-current-folder!
+
+      # namespaces = '.' : current-folder
+
+      namespaces = {}
 
       get-qualified-namespace-path = (qualified-namespace) ->
 
-        if qualified-namespace is ''
-          qualified-namespace = '.'
+        # registered namespaces
 
         namespace-path = namespaces[ qualified-namespace ]
 
@@ -76,50 +99,65 @@
 
           return namespace-path
 
+        # configuration-namespaces
+
         namespace-path = configuration-namespaces[ qualified-namespace ]
 
         if namespace-path isnt void
 
-          if fs.folder-exists namespace-path
+          if folder-exists namespace-path
 
             namespaces[ qualified-namespace ] := namespace-path
             return namespace-path
 
-          throw new Error "Folder '#namespace-path' for namespace '#qualified-namespace' in configuration file '#configuration-filename' does not exist"
+          throw new Error "Folder '#namespace-path' for namespace '#qualified-namespace' in configuration file '#configuration-filename' not found."
 
-        build-path = (* '\\')
+        # script-path
 
         namespace-path =
 
-          [ current-folder ]
-          |> (++ qualified-namespace / '.')
-          |> build-path
+          [ script-path ]
+            |> (++ qualified-namespace / '.')
+            |> build-path
 
-        if fs.folder-exists namespace-path
+        if folder-exists namespace-path
 
           namespaces[ qualified-namespace ] := namespace-path
           return namespace-path
 
-        if configuration-namespaces[ '.' ] isnt void
+        # current-folder path
 
-          namespace-path =
+        namespace-path =
 
-            [ configuration-namespaces[ '.' ] ]
+          [ current-folder ]
             |> (++ qualified-namespace / '.')
             |> build-path
 
-          if fs.folder-exists namespace-path
+        if folder-exists namespace-path
 
-            namespaces[ qualified-namespace ] := namespace-path
-            return namespace-path
+          namespaces[ qualified-namespace ] := namespace-path
+          return namespace-path
 
-        throw new Error "Folder '#namespace-path' for namespace '#qualified-namespace' does not exist"
+        # winjs path
+
+        namespace-path =
+
+          [ winjs-path ]
+            |> (++ qualified-namespace / '.')
+            |> build-path
+
+        if folder-exists namespace-path
+
+          namespaces[ qualified-namespace ] := namespace-path
+          return namespace-path
+
+        throw new Error "Folder for namespace '#qualified-namespace' not found."
 
       {
         get-qualified-namespace-path
       }
 
-    ##
+    #
 
     parse-qualified-dependency-name = (qualified-dependency-name) ->
 
@@ -128,6 +166,8 @@
       qualified-namespace = namespaces * '.' |> lcase
 
       { qualified-namespace, dependency-name }
+
+    #
 
     dependency-builder = do ->
 
@@ -139,11 +179,11 @@
 
         namespace-path = namespace-path-manager.get-qualified-namespace-path qualified-namespace
 
-        dependency-full-path = [ namespace-path, filename ] * '\\'
+        dependency-full-path = build-path [ namespace-path, filename ]
 
-        if not fs.file-exists dependency-full-path
+        if not file-exists dependency-full-path
 
-          throw new Error "Dependency file '#dependency-full-path' not found"
+          throw new Error "Dependency file '#dependency-full-path' not found."
 
         winjs.load-script dependency-full-path, "(#qualified-dependency-name) #dependency-full-path"
 
@@ -151,7 +191,7 @@
         build-dependency
       }
 
-    ##
+    #
 
     dependency-manager = do ->
 
@@ -175,18 +215,21 @@
         get-dependency
       }
 
-    ##
+    #
 
     (qualified-dependency-name) -> dependency-manager.get-dependency qualified-dependency-name
 
+    #
+
+  #
+
   do ->
 
-    args = winjs.process.args
-
-    fs = os.file-system
+    { args } = winjs.process
 
     if args.length > 2
 
       script = args.2
 
-      winjs.load-script script, "script #script"
+      winjs.load-script script, '' #, "script #script"
+
