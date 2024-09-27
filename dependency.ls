@@ -79,7 +79,9 @@
 
       configuration-filename = 'namespaces.conf'
 
-      configuration-filepath = build-path [ script-path, configuration-filename ]
+      # configuration-filepath = build-path [ script-path, configuration-filename ]
+
+      configuration-filepath = configuration-filename
 
       configuration-namespaces = read-configuration-file configuration-filepath
 
